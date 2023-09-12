@@ -1,44 +1,42 @@
-import { Helmet } from 'react-helmet-async';
 import { filter } from 'lodash';
-import { sentenceCase } from 'change-case';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 // @mui
 import {
-  Card,
-  Table,
-  Stack,
-  Paper,
-  Avatar,
+  Box,
   Button,
-  Popover,
+  Card,
   Checkbox,
-  TableRow,
+  Container,
+  IconButton,
   MenuItem,
+  Paper,
+  Popover,
+  Stack,
+  Table,
   TableBody,
   TableCell,
-  Container,
-  Typography,
-  IconButton,
   TableContainer,
   TablePagination,
+  TableRow,
+  TextField,
+  Typography,
 } from '@mui/material';
 // components
-import Label from '../components/label';
+// eslint-disable-next-line import/no-unresolved
+import { DataHelper } from 'src/helper/DataHelper';
 import Iconify from '../components/iconify';
 import Scrollbar from '../components/scrollbar';
 // sections
 import { UserListHead, UserListToolbar } from '../sections/@dashboard/user';
 // mock
-import USERLIST from '../_mock/user';
-
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Name', alignRight: false },
-  { id: 'company', label: 'Company', alignRight: false },
-  { id: 'role', label: 'Role', alignRight: false },
-  { id: 'isVerified', label: 'Verified', alignRight: false },
-  { id: 'status', label: 'Status', alignRight: false },
+  { id: 'name', label: 'Tên', alignRight: false },
+  { id: 'description', label: 'Mô tả', alignRight: false },
+  { id: 'type', label: 'Thể loại', alignRight: false },
+  { id: 'edit', label: 'Sửa', alignRight: false },
   { id: '' },
 ];
 
@@ -86,10 +84,26 @@ export default function TopicsPage() {
 
   const [filterName, setFilterName] = useState('');
 
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-
-  const handleOpenMenu = (event) => {
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [data, setData] = useState([]);
+  const [modalShow, setModalShow] = useState(false);
+  const [isAddNew, setIsAddNew] = useState(false);
+  const [itemNew, setItemNew] = useState({
+    id: '',
+    name: '',
+    type: '',
+    description: '',
+  });
+  useEffect(() => {
+    const getData = async () => {
+      const result = await DataHelper.getTopics();
+      setData(result);
+    };
+    getData();
+  }, []);
+  const handleOpenMenu = (event, item) => {
     setOpen(event.currentTarget);
+    setItemNew(item);
   };
 
   const handleCloseMenu = () => {
@@ -104,13 +118,32 @@ export default function TopicsPage() {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelecteds = USERLIST.map((n) => n.name);
+      const newSelecteds = data.map((n) => n.name);
       setSelected(newSelecteds);
       return;
     }
     setSelected([]);
   };
-
+  const _handleAddTopics = async () => {
+    setIsAddNew(false);
+    setModalShow(false);
+    if (isAddNew) {
+      await DataHelper.addTopics(itemNew);
+      window.location.reload(true);
+      return;
+    }
+    await DataHelper.updateTopics(itemNew);
+    window.location.reload(true);
+  };
+  const _handleDeleteItem = async () => {
+    await DataHelper.deleteTopics(itemNew.id);
+    setOpen(null);
+    window.location.reload(true);
+  };
+  const _handleEditItem = () => {
+    setModalShow(true);
+    setOpen(null);
+  };
   const handleClick = (event, name) => {
     const selectedIndex = selected.indexOf(name);
     let newSelected = [];
@@ -140,28 +173,37 @@ export default function TopicsPage() {
     setFilterName(event.target.value);
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - USERLIST.length) : 0;
-
-  const filteredUsers = applySortFilter(USERLIST, getComparator(order, orderBy), filterName);
-
-  const isNotFound = !filteredUsers.length && !!filterName;
-
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - data.length) : 0;
+  const filteredData = applySortFilter(data, getComparator(order, orderBy), filterName);
+  const isNotFound = !filteredData.length && !!filterName;
   return (
     <>
       <Helmet>
-        <title> User | Minimal UI </title>
+        <title> LOẠI ĐỀ THI | quản lý loại đề thi </title>
       </Helmet>
 
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            User
+            LOẠI ĐỀ THI
           </Typography>
-          <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />}>
-            New User
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="eva:plus-fill" />}
+            onClick={() => [
+              setModalShow(true),
+              setItemNew({
+                id: '',
+                name: '',
+                description: '',
+                type: '',
+              }),
+              setIsAddNew(true),
+            ]}
+          >
+            Thêm loại đề thi
           </Button>
         </Stack>
-
         <Card>
           <UserListToolbar numSelected={selected.length} filterName={filterName} onFilterName={handleFilterByName} />
 
@@ -172,43 +214,33 @@ export default function TopicsPage() {
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={USERLIST.length}
+                  rowCount={data.length}
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
-                  {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                    const { id, name, role, status, company, avatarUrl, isVerified } = row;
+                  {filteredData.map((item, index) => {
+                    const { name, description, type } = item;
                     const selectedUser = selected.indexOf(name) !== -1;
 
                     return (
-                      <TableRow hover key={id} tabIndex={-1} role="checkbox" selected={selectedUser}>
+                      <TableRow hover key={index} tabIndex={-1} role="checkbox" selected={selectedUser}>
                         <TableCell padding="checkbox">
                           <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, name)} />
                         </TableCell>
-
-                        <TableCell component="th" scope="row" padding="none">
-                          <Stack direction="row" alignItems="center" spacing={2}>
-                            <Avatar alt={name} src={avatarUrl} />
-                            <Typography variant="subtitle2" noWrap>
-                              {name}
-                            </Typography>
-                          </Stack>
-                        </TableCell>
-
-                        <TableCell align="left">{company}</TableCell>
-
-                        <TableCell align="left">{role}</TableCell>
-
-                        <TableCell align="left">{isVerified ? 'Yes' : 'No'}</TableCell>
-
                         <TableCell align="left">
-                          <Label color={(status === 'banned' && 'error') || 'success'}>{sentenceCase(status)}</Label>
+                          <Typography variant="subtitle2" noWrap>
+                            {name}
+                          </Typography>
                         </TableCell>
+
+                        <TableCell align="left">{description}</TableCell>
+
+                        <TableCell align="left">{type}</TableCell>
 
                         <TableCell align="right">
-                          <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
+                          <IconButton size="large" color="inherit" onClick={(event) => handleOpenMenu(event, item)}>
                             <Iconify icon={'eva:more-vertical-fill'} />
                           </IconButton>
                         </TableCell>
@@ -250,9 +282,9 @@ export default function TopicsPage() {
           </Scrollbar>
 
           <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
+            rowsPerPageOptions={[10, 20, 50]}
             component="div"
-            count={USERLIST.length}
+            count={data.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
@@ -260,6 +292,85 @@ export default function TopicsPage() {
           />
         </Card>
       </Container>
+      <Popover
+        open={Boolean(modalShow)}
+        anchorEl={null}
+        anchorOrigin={{
+          vertical: 'center',
+          horizontal: 'center',
+        }}
+        transformOrigin={{
+          vertical: 'center',
+          horizontal: 'center',
+        }}
+        PaperProps={{
+          sx: {
+            p: 1,
+            width: 600,
+          },
+        }}
+      >
+        <Box
+          sx={{
+            '& .MuiTextField-root': { m: 1, width: '25ch' },
+          }}
+        >
+          <p>{itemNew.name.trim().length > 0 ? 'Sửa Đề Thi' : 'Thêm Đề Thi'}</p>
+          <TextField
+            required
+            id="outlined-required"
+            label="Tên Đề"
+            placeholder="Nhập Tên Đề Thi"
+            style={styles.input}
+            onChange={(event) => {
+              setItemNew({
+                ...itemNew,
+                name: event.target.value,
+              });
+            }}
+            defaultValue={itemNew.name}
+          />
+          <TextField
+            style={styles.input}
+            required
+            id="outlined-required"
+            label="Mô Tả"
+            placeholder="Nhập Mô Tả"
+            multiline
+            maxRows={4}
+            minRows={4}
+            onChange={(event) => {
+              setItemNew({
+                ...itemNew,
+                description: event.target.value,
+              });
+            }}
+            defaultValue={itemNew.description}
+          />
+          <TextField
+            style={styles.input}
+            required
+            id="outlined-required"
+            label="Loại đề"
+            placeholder="Nhập Loại Đề"
+            onChange={(event) => {
+              setItemNew({
+                ...itemNew,
+                type: event.target.value,
+              });
+            }}
+            defaultValue={itemNew.type}
+          />
+          <MenuItem onClick={_handleAddTopics}>
+            <Iconify icon={'eva:edit-fill'} sx={{ mr: 2 }} />
+            Xong
+          </MenuItem>
+          <MenuItem sx={{ color: 'error.main' }} onClick={() => setModalShow(!modalShow)}>
+            <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
+            Đóng
+          </MenuItem>
+        </Box>
+      </Popover>
 
       <Popover
         open={Boolean(open)}
@@ -279,12 +390,12 @@ export default function TopicsPage() {
           },
         }}
       >
-        <MenuItem>
+        <MenuItem onClick={_handleEditItem}>
           <Iconify icon={'eva:edit-fill'} sx={{ mr: 2 }} />
           Edit
         </MenuItem>
 
-        <MenuItem sx={{ color: 'error.main' }}>
+        <MenuItem sx={{ color: 'error.main' }} onClick={_handleDeleteItem}>
           <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
           Delete
         </MenuItem>
@@ -292,3 +403,8 @@ export default function TopicsPage() {
     </>
   );
 }
+const styles = {
+  input: {
+    width: '90%',
+  },
+};
