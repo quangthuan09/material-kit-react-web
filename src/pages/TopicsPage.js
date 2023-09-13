@@ -96,6 +96,7 @@ export default function TopicsPage() {
   const [data, setData] = useState([]);
   const [count, setCount] = useState(10);
   const [modalShow, setModalShow] = useState(false);
+  const [modalShowDelete, setModalShowDelete] = useState(false);
   const [isAddNew, setIsAddNew] = useState(false);
   const [itemNew, setItemNew] = useState({
     id: '',
@@ -171,8 +172,11 @@ export default function TopicsPage() {
     window.location.reload(true);
   };
   const _handleDeleteItem = async () => {
-    await DataHelper.deleteTopics(itemNew.id);
+    setModalShowDelete(true);
     setOpen(null);
+  };
+  const _handleAcceptDelete = async () => {
+    await DataHelper.deleteTopics(itemNew.id);
     window.location.reload(true);
   };
   const _handleEditItem = () => {
@@ -208,7 +212,6 @@ export default function TopicsPage() {
     setFilterName(event.target.value);
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - data.length) : 0;
   const filteredData = applySortFilter(data, getComparator(order, orderBy), filterName);
   const isNotFound = !filteredData.length && !!filterName;
   return (
@@ -282,11 +285,6 @@ export default function TopicsPage() {
                       </TableRow>
                     );
                   })}
-                  {emptyRows > 0 && (
-                    <TableRow style={{ height: 53 * emptyRows }}>
-                      <TableCell colSpan={6} />
-                    </TableRow>
-                  )}
                 </TableBody>
 
                 {isNotFound && (
@@ -434,6 +432,40 @@ export default function TopicsPage() {
           <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
           Delete
         </MenuItem>
+      </Popover>
+      <Popover
+        open={Boolean(modalShowDelete)}
+        anchorEl={null}
+        anchorOrigin={{
+          vertical: 'center',
+          horizontal: 'center',
+        }}
+        transformOrigin={{
+          vertical: 'center',
+          horizontal: 'center',
+        }}
+        PaperProps={{
+          sx: {
+            p: 1,
+            width: 600,
+          },
+        }}
+      >
+        <Box
+          sx={{
+            '& .MuiTextField-root': { m: 1, width: '25ch' },
+          }}
+        >
+          <p>{'Đồng ý xoá ?'}</p>
+          <MenuItem onClick={_handleAcceptDelete}>
+            <Iconify icon={'eva:edit-fill'} sx={{ mr: 2 }} />
+            Đồng ý
+          </MenuItem>
+          <MenuItem sx={{ color: 'error.main' }} onClick={() => setModalShowDelete(!modalShowDelete)}>
+            <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
+            Đóng
+          </MenuItem>
+        </Box>
       </Popover>
     </>
   );
