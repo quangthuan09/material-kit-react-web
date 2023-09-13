@@ -92,9 +92,9 @@ export default function TopicsPage() {
   const [orderBy, setOrderBy] = useState('name');
 
   const [filterName, setFilterName] = useState('');
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [data, setData] = useState([]);
-  const [count, setCount] = useState(30);
+  const [count, setCount] = useState(10);
   const [modalShow, setModalShow] = useState(false);
   const [isAddNew, setIsAddNew] = useState(false);
   const [itemNew, setItemNew] = useState({

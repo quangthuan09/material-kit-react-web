@@ -36,7 +36,7 @@ export const DataHelper = {
     const nextPage =
       lastVisible && page !== 0
         ? await getDocs(query(collection(db, 'topics'), orderBy('name'), startAfter(lastVisible), limit(limitItem)))
-        : await getDocs(query(collection(db, 'topics'), orderBy('name'), limit(5)));
+        : await getDocs(query(collection(db, 'topics'), orderBy('name'), limit(limitItem)));
     lastVisible = nextPage.docs[nextPage.docs.length - 1];
     const resultList = nextPage.docs.map((doc) => {
       const itemConvert = {
