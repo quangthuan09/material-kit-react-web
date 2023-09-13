@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore/lite';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { addDoc, collection, deleteDoc, doc, getDocs, getFirestore, updateDoc } from 'firebase/firestore/lite';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyC9960MgBMZrL7sil8DKQnXfxCs3FPteQA',
@@ -12,6 +13,8 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+const auth = getAuth(app);
 
 export const DataHelper = {
   getTopics: async () => {
@@ -49,5 +52,20 @@ export const DataHelper = {
   },
   deleteTopics: async (id) => {
     await deleteDoc(doc(db, 'topics', id));
+  },
+  login: async (email, password) => {
+    const user = await signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        // Signed in
+        const { user } = userCredential;
+        return user;
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorCode, errorMessage);
+        // ..
+      });
+    return user;
   },
 };

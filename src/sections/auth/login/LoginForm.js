@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 // @mui
-import { Link, Stack, IconButton, InputAdornment, TextField, Checkbox } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
+import { Checkbox, IconButton, InputAdornment, Link, Stack, TextField } from '@mui/material';
+import { useSetAtom } from 'jotai';
+import { DataHelper } from '../../../helper/DataHelper';
+import { user } from '../../../state/index';
 // components
 import Iconify from '../../../components/iconify';
 
@@ -10,22 +13,32 @@ import Iconify from '../../../components/iconify';
 
 export default function LoginForm() {
   const navigate = useNavigate();
-
+  const setUser = useSetAtom(user);
   const [showPassword, setShowPassword] = useState(false);
-
-  const handleClick = () => {
-    navigate('/dashboard', { replace: true });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const handleClick = async () => {
+    const userData = await DataHelper.login(email, password);
+    setUser(userData);
+    if (userData) navigate('/dashboard', { replace: true });
   };
 
   return (
     <>
       <Stack spacing={3}>
-        <TextField name="email" label="Email address" />
+        <TextField
+          name="email"
+          label="Email address"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+        />
 
         <TextField
           name="password"
           label="Password"
           type={showPassword ? 'text' : 'password'}
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">

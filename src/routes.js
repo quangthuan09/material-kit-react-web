@@ -1,5 +1,6 @@
 import { Navigate, useRoutes } from 'react-router-dom';
 // layouts
+import { useAtomValue } from 'jotai';
 import DashboardLayout from './layouts/dashboard';
 import SimpleLayout from './layouts/simple';
 //
@@ -10,27 +11,31 @@ import Page404 from './pages/Page404';
 import ProductsPage from './pages/ProductsPage';
 import DashboardAppPage from './pages/DashboardAppPage';
 import TopicsPage from './pages/TopicsPage';
+import { user } from './state';
 
 // ----------------------------------------------------------------------
 
 export default function Router() {
+  const userData = useAtomValue(user) || {};
   const routes = useRoutes([
-    {
-      path: '/dashboard',
-      element: <DashboardLayout />,
-      children: [
-        { element: <Navigate to="/dashboard/app" />, index: true },
-        { path: 'app', element: <DashboardAppPage /> },
-        { path: 'user', element: <UserPage /> },
-        { path: 'products', element: <ProductsPage /> },
-        { path: 'blog', element: <BlogPage /> },
-        { path: 'topics', element: <TopicsPage /> },
-      ],
-    },
     {
       path: 'login',
       element: <LoginPage />,
     },
+    userData
+      ? {
+          path: '/dashboard',
+          element: <DashboardLayout />,
+          children: [
+            { element: <Navigate to="/dashboard/app" />, index: true },
+            { path: 'app', element: <DashboardAppPage /> },
+            { path: 'user', element: <UserPage /> },
+            { path: 'products', element: <ProductsPage /> },
+            { path: 'blog', element: <BlogPage /> },
+            { path: 'topics', element: <TopicsPage /> },
+          ],
+        }
+      : null,
     {
       element: <SimpleLayout />,
       children: [
