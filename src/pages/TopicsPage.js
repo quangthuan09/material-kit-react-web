@@ -1,5 +1,5 @@
 import { filter } from 'lodash';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 // @mui
 import {
@@ -24,7 +24,16 @@ import {
 } from '@mui/material';
 // components
 // eslint-disable-next-line import/no-unresolved
-import { DataHelper } from 'src/helper/DataHelper';
+import { DataHelper, db } from 'src/helper/DataHelper';
+import {
+  collection,
+  getDocs,
+  limit,
+  query,
+  orderBy as orderByFireStore,
+  startAt,
+  startAfter,
+} from 'firebase/firestore/lite';
 import Iconify from '../components/iconify';
 import Scrollbar from '../components/scrollbar';
 // sections
@@ -83,9 +92,9 @@ export default function TopicsPage() {
   const [orderBy, setOrderBy] = useState('name');
 
   const [filterName, setFilterName] = useState('');
-
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [data, setData] = useState([]);
+  const [count, setCount] = useState(30);
   const [modalShow, setModalShow] = useState(false);
   const [isAddNew, setIsAddNew] = useState(false);
   const [itemNew, setItemNew] = useState({
@@ -94,13 +103,39 @@ export default function TopicsPage() {
     type: '',
     description: '',
   });
+  const lastVisible = useRef();
+  useEffect(() => {
+    const fetchData = async () => {
+      const first = query(collection(db, 'topics'), orderByFireStore('name'), limit(5));
+      const documentSnapshots1 = await getDocs(first);
+      if (!lastVisible.current) lastVisible.current = documentSnapshots1.docs[documentSnapshots1.docs.length - 1];
+      const next =
+        lastVisible.current && page !== 0
+          ? await getDocs(
+              query(collection(db, 'topics'), orderByFireStore('name'), startAfter(lastVisible.current), limit(5))
+            )
+          : await getDocs(query(collection(db, 'topics'), orderByFireStore('name'), limit(5)));
+      lastVisible.current = next.docs[next.docs.length - 1];
+      const resultList = next.docs.map((doc) => {
+        const itemConvert = {
+          id: doc.id,
+          ...doc.data(),
+        };
+        return itemConvert;
+      });
+      setData(resultList);
+    };
+    fetchData();
+  }, [orderBy, page, rowsPerPage]);
+
   useEffect(() => {
     const getData = async () => {
-      const result = await DataHelper.getTopics();
-      setData(result);
+      const result = await DataHelper.getTopics(rowsPerPage, page);
+      setData(result.data);
+      setCount(result.total);
     };
     getData();
-  }, []);
+  }, [page, rowsPerPage]);
   const handleOpenMenu = (event, item) => {
     setOpen(event.currentTarget);
     setItemNew(item);
@@ -165,7 +200,7 @@ export default function TopicsPage() {
 
   const handleChangeRowsPerPage = (event) => {
     setPage(0);
-    setRowsPerPage(parseInt(event.target.value, 10));
+    setRowsPerPage(parseInt(event.target.value, rowsPerPage));
   };
 
   const handleFilterByName = (event) => {
@@ -214,7 +249,7 @@ export default function TopicsPage() {
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={data.length}
+                  rowCount={count}
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
@@ -282,9 +317,9 @@ export default function TopicsPage() {
           </Scrollbar>
 
           <TablePagination
-            rowsPerPageOptions={[10, 20, 50]}
+            rowsPerPageOptions={[5, 10, 20, 50]}
             component="div"
-            count={data.length}
+            count={count}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}

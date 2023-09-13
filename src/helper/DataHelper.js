@@ -1,6 +1,18 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-import { addDoc, collection, deleteDoc, doc, getDocs, getFirestore, updateDoc } from 'firebase/firestore/lite';
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  getFirestore,
+  limit,
+  orderBy,
+  query,
+  startAfter,
+  updateDoc,
+} from 'firebase/firestore/lite';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyC9960MgBMZrL7sil8DKQnXfxCs3FPteQA',
@@ -12,22 +24,31 @@ const firebaseConfig = {
   measurementId: 'G-MKFK8FB8CD',
 };
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+export const db = getFirestore(app);
 
 const auth = getAuth(app);
+let lastVisible = [];
 
 export const DataHelper = {
-  getTopics: async () => {
-    const resultCol = collection(db, 'topics');
-    const resultSnapshot = await getDocs(resultCol);
-    const resultList = resultSnapshot.docs.map((doc) => {
+  getTopics: async (limitItem, page = 0) => {
+    const initData = await getDocs(query(collection(db, 'topics'), orderBy('name'), limit(limitItem)));
+    if (!lastVisible) lastVisible = initData.docs[initData.docs.length - 1];
+    const nextPage =
+      lastVisible && page !== 0
+        ? await getDocs(query(collection(db, 'topics'), orderBy('name'), startAfter(lastVisible), limit(limitItem)))
+        : await getDocs(query(collection(db, 'topics'), orderBy('name'), limit(5)));
+    lastVisible = nextPage.docs[nextPage.docs.length - 1];
+    const resultList = nextPage.docs.map((doc) => {
       const itemConvert = {
         id: doc.id,
         ...doc.data(),
       };
       return itemConvert;
     });
-    return resultList;
+    const collectionRef = collection(db, 'topics');
+    const resultSnapshot = await getDocs(collectionRef);
+    const countData = resultSnapshot.docs.length;
+    return { data: resultList, total: countData };
   },
   addTopics: async (data) => {
     try {
