@@ -1,4 +1,4 @@
-## Minimal [(Free version)](https://minimal-kit-react.vercel.app/)
+## Ride Exam [(Free version)](https://minimal-kit-react.vercel.app/)
 
 ![license](https://img.shields.io/badge/license-MIT-blue.svg)
 
@@ -6,15 +6,15 @@
 
 ![preview](public/assets/preview.jpg)
 
-| [Minimal Free](https://minimal-kit-react.vercel.app/) | [Minimal](https://material-ui.com/store/items/minimal-dashboard/) |
-| ----------------------------------------------------- | :---------------------------------------------------------------- |
-| **6** Demo pages                                      | **50+** demo pages                                                |
-| -                                                     | ✓ Multi-language                                                  |
-| -                                                     | ✓ Dark/Light Mode 🌓                                              |
-| -                                                     | ✓ [More components](https://minimals.cc/components)               |
-| -                                                     | ✓ Next.js version                                                 |
-| -                                                     | ✓ TypeScript version                                              |
-| -                                                     | ✓ Design files (Figma & Sketch)                                   |
+| [Ride Exam Free](https://minimal-kit-react.vercel.app/) | [Ride Exam](https://material-ui.com/store/items/minimal-dashboard/) |
+| ------------------------------------------------------- | :------------------------------------------------------------------ |
+| **6** Demo pages                                        | **50+** demo pages                                                  |
+| -                                                       | ✓ Multi-language                                                    |
+| -                                                       | ✓ Dark/Light Mode 🌓                                                |
+| -                                                       | ✓ [More components](https://minimals.cc/components)                 |
+| -                                                       | ✓ Next.js version                                                   |
+| -                                                       | ✓ TypeScript version                                                |
+| -                                                       | ✓ Design files (Figma & Sketch)                                     |
 
 ## Page demo
 

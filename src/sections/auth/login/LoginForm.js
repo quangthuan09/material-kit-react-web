@@ -20,7 +20,7 @@ export default function LoginForm() {
   const handleClick = async () => {
     const userData = await DataHelper.login(email, password);
     setUser(userData);
-    if (userData) navigate('/dashboard', { replace: true });
+    if (userData) navigate('/dashboard/topics', { replace: true });
   };
 
   return (
