@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { alpha } from '@mui/material/styles';
 import { Box, Divider, Typography, Stack, MenuItem, Avatar, IconButton, Popover } from '@mui/material';
 // mocks_
-import { useSetAtom } from 'jotai';
-import { useNavigate, useNavigation } from 'react-router-dom';
+import { useAtom, useSetAtom } from 'jotai';
+import { useNavigate } from 'react-router-dom';
 import { user } from '../../../state/index';
 import account from '../../../_mock/account';
 
@@ -31,15 +31,13 @@ export default function AccountPopover() {
   const navigate = useNavigate();
 
   const [open, setOpen] = useState(null);
-  const setUserData = useSetAtom(user);
   const handleOpen = (event) => {
     setOpen(event.currentTarget);
   };
-
   const handleClose = () => {
     setOpen(null);
-    setUserData({});
-    navigate('/login', { replace: true });
+    localStorage.removeItem('user');
+    navigate('/login', { reset: true });
   };
 
   return (

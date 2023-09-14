@@ -13,14 +13,19 @@ import Iconify from '../../../components/iconify';
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  const setUser = useSetAtom(user);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const handleClick = async () => {
     const userData = await DataHelper.login(email, password);
-    setUser(userData);
-    if (userData) navigate('/dashboard/topics', { replace: true });
+    if (localStorage && userData) {
+      // LocalStorage is supported
+      localStorage.setItem('user', JSON.stringify(userData));
+      navigate('/dashboard/topics', { replace: true });
+    } else {
+      // No support. Fallback here!
+      console.log('no support for web');
+    }
   };
 
   return (

@@ -1,6 +1,7 @@
 import { Navigate, useRoutes } from 'react-router-dom';
 // layouts
 import { useAtomValue } from 'jotai';
+import * as _ from 'lodash';
 import DashboardLayout from './layouts/dashboard';
 import SimpleLayout from './layouts/simple';
 //
@@ -12,18 +13,17 @@ import ProductsPage from './pages/ProductsPage';
 import DashboardAppPage from './pages/DashboardAppPage';
 import TopicsPage from './pages/TopicsPage';
 import { user } from './state';
-
 // ----------------------------------------------------------------------
 
 export default function Router() {
-  const userData = useAtomValue(user) || {};
+  const user = JSON.parse(localStorage.getItem('user'));
   const routes = useRoutes([
-    {
-      path: 'login',
-      element: <LoginPage />,
-    },
-    userData
+    !user?.stsTokenManager?.accessToken
       ? {
+          path: 'login',
+          element: <LoginPage />,
+        }
+      : {
           path: '/dashboard',
           element: <DashboardLayout />,
           children: [
@@ -34,8 +34,7 @@ export default function Router() {
             { path: 'blog', element: <BlogPage /> },
             { path: 'topics', element: <TopicsPage /> },
           ],
-        }
-      : null,
+        },
     {
       element: <SimpleLayout />,
       children: [
@@ -49,6 +48,5 @@ export default function Router() {
       element: <Navigate to="/404" replace />,
     },
   ]);
-
   return routes;
 }
